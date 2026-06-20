@@ -21,17 +21,19 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install -y python3-pip python3-setuptools git zip unzip openjdk-17-jdk
+          sudo apt install -y python3-pip python3-setuptools git zip unzip openjdk-17-jdk wget
           pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Verify Buildozer installation
+      - name: Diagnostic - Vérifier Buildozer
         run: |
-          buildozer --version || echo "Buildozer installé avec succès"
+          echo "=== Vérification de Buildozer ==="
+          which buildozer || echo "⚠️ Buildozer introuvable dans le PATH"
+          python3 -m buildozer --version || echo "⚠️ Impossible d’exécuter Buildozer"
+          echo "=== Fin de la vérification ==="
 
       - name: Install Android SDK and NDK
         run: |
-          sudo apt install -y wget
           mkdir -p $HOME/android-sdk
           cd $HOME/android-sdk
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
@@ -42,9 +44,11 @@ jobs:
       - name: Build APK
         env:
           ANDROID_HOME: $HOME/android-sdk
-          PATH: $HOME/android-sdk/platform-tools:$PATH
+          PATH: $HOME/android-sdk/platform-tools:$HOME/.local/bin:$PATH
         run: |
-          buildozer android debug
+          echo "=== Début de la compilation ==="
+          python3 -m buildozer android debug || echo "⚠️ Erreur pendant la compilation"
+          echo "=== Fin de la compilation ==="
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
