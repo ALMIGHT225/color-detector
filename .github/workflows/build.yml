@@ -35,15 +35,25 @@ jobs:
       - name: Install Android SDK and NDK
         run: |
           echo "=== Installation du SDK Android ==="
-          mkdir -p $HOME/android-sdk/cmdline-tools/latest
-          cd $HOME/android-sdk/cmdline-tools/latest
+          mkdir -p $HOME/android-sdk/cmdline-tools
+          cd $HOME/android-sdk/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip commandlinetools-linux-9477386_latest.zip
+          mv cmdline-tools latest
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
           echo "=== SDK Android installé avec succès ==="
+
+      - name: Vérification SDK
+        env:
+          ANDROID_HOME: $HOME/android-sdk
+          PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        run: |
+          echo "=== Vérification du SDK ==="
+          sdkmanager --list | head -n 20
+          echo "=== Fin de la vérification ==="
 
       - name: Build APK
         env:
