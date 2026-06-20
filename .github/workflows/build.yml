@@ -34,17 +34,21 @@ jobs:
 
       - name: Install Android SDK and NDK
         run: |
-          mkdir -p $HOME/android-sdk
-          cd $HOME/android-sdk
+          echo "=== Installation du SDK Android ==="
+          mkdir -p $HOME/android-sdk/cmdline-tools/latest
+          cd $HOME/android-sdk/cmdline-tools/latest
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip commandlinetools-linux-9477386_latest.zip -d cmdline-tools
-          yes | cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
-          cmdline-tools/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          unzip commandlinetools-linux-9477386_latest.zip
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          echo "=== SDK Android installé avec succès ==="
 
       - name: Build APK
         env:
           ANDROID_HOME: $HOME/android-sdk
-          PATH: $HOME/android-sdk/platform-tools:$HOME/.local/bin:$PATH
+          PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/.local/bin:$PATH
         run: |
           echo "=== Début de la compilation ==="
           python3 -m buildozer android debug || echo "⚠️ Erreur pendant la compilation"
