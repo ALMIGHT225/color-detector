@@ -1,71 +1,28 @@
-name: Build APK
+name: Build Android APK
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout du code source
+        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Compilation avec Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
         with:
-          python-version: "3.10"
+          command: buildozer android debug
+          buildozer_version: master
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y python3-pip python3-setuptools git zip unzip openjdk-17-jdk wget
-          pip install --upgrade pip
-          pip install buildozer cython
-
-      - name: Diagnostic - Vérifier Buildozer
-        run: |
-          echo "=== Vérification de Buildozer ==="
-          which buildozer || echo "⚠️ Buildozer introuvable dans le PATH"
-          python3 -m buildozer --version || echo "⚠️ Impossible d’exécuter Buildozer"
-          echo "=== Fin de la vérification ==="
-
-      - name: Install Android SDK and NDK
-        run: |
-          echo "=== Installation du SDK Android ==="
-          mkdir -p $HOME/android-sdk/cmdline-tools
-          cd $HOME/android-sdk/cmdline-tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip commandlinetools-linux-9477386_latest.zip
-          mv cmdline-tools latest
-          export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
-          echo "=== SDK Android installé avec succès ==="
-
-      - name: Vérification SDK
-        env:
-          ANDROID_HOME: $HOME/android-sdk
-          PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-        run: |
-          echo "=== Vérification du SDK ==="
-          sdkmanager --list | head -n 20
-          echo "=== Fin de la vérification ==="
-
-      - name: Build APK
-        env:
-          ANDROID_HOME: $HOME/android-sdk
-          PATH: $HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/platform-tools:$HOME/.local/bin:$PATH
-        run: |
-          echo "=== Début de la compilation ==="
-          python3 -m buildozer android debug || echo "⚠️ Erreur pendant la compilation"
-          echo "=== Fin de la compilation ==="
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - name: Upload de l'APK (Artefact)
+        uses: actions/upload-artifact@v3
         with:
-          name: app-apk
-          path: bin/*.apk
+          name: DetecteurCouleur-APK
+          path: ${{ steps.buildozer.outputs.filename }}
